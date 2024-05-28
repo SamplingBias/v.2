@@ -1,0 +1,105 @@
+library(sf)
+library(rnaturalearth)
+library(tidyverse)
+library(terra)
+library(ggplot2)
+library(viridis)
+
+d <- readRDS("d.rds")
+
+Nat2000 <- st_read("Natura2000_end2021_epsg3035.shp") # in Natura2000 folder 
+
+point <- d %>% dplyr::select(X, Y, PlotObservationID)%>%unique()%>%
+      drop_na()%>%
+      st_as_sf(coords = c("X", "Y"), crs = st_crs(3035)) 
+
+Nat2000 <- st_transform(Nat2000, crs = st_crs(3035))
+
+#Nat2000 <- st_make_valid(Nat2000) 
+sp <- st_intersects(point, Nat2000)
+ov <- purrr::map_depth(sp, 1, ~ifelse(is.null(.x), NA, .x) )
+
+OV_l <- unlist(ov)
+
+rm(Nat2000)
+rm(point)
+
+y3 <- d %>% dplyr::select(id, X, Y, PlotObservationID)%>%unique()%>%
+      drop_na() %>%
+      cbind(., lyr.1= OV_l)%>%drop_na() #47.14% IN
+                               #52.86% OUT
+     
+
+
+y3$IN <- 1
+
+
+r <- rast(resolution=0.5)
+e <- ext(-16.1,40.18, 32.88, 84.73)
+r<- crop(r, e)
+r <- project(r, "EPSG:3035")
+values(r) <- 1:ncell(r)
+
+df.r <- as.data.frame(r, xy=TRUE)
+colnames(df.r)<- c("x","y","id")
+
+
+# number of plots inside pretected areas per grid cell
+
+DFinS <- y3 %>% group_by(id)  %>%
+  mutate(countIN= sum(IN)) %>%
+  ungroup() 
+
+# centroids of the grid cells
+
+nNat2 <- DFinS %>% inner_join(., df.r, by="id")
+
+# number of plots per grid cell
+
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+  mutate(nPlot = n()) %>%
+  ungroup() %>% dplyr::select(id, nPlot)
+
+# relative number of plots inside protected areas per grid cell
+
+nNat2 <- nNat2 %>% inner_join(., nPlot, by="id") %>% mutate(rIN = countIN/nPlot) %>% dplyr::select(id, rIN) %>% unique()
+
+saveRDS(nNat2, "nNat2.rds")
+
+nNat2 <- nNat2 %>% inner_join(., df.r, by="id") %>%
+  st_as_sf(coords = c("x", "y"), crs = st_crs(3035))
+
+
+v <- vect(nNat2)
+Natr <- rasterize(v, r, field="rIN")
+
+rm(v)
+
+spNat <- as.polygons(Natr, dissolve=FALSE)
+
+world <- ne_coastline(scale = "medium", returnclass = "sf")
+world <- world %>% st_transform(crs = st_crs(3035))
+
+spNat  %>% 
+  st_as_sf () %>%  
+  ggplot()+
+  geom_sf(data=world,
+          colour = "black", fill = "lightgray")+
+  geom_sf(aes(fill =last))+
+  scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
+ coord_sf(xlim = c(2100000, 6500000), ylim = c(1100000, 5500000), expand = TRUE, datum = sf::st_crs(3035))+
+  labs(title = "Relative number of plots in Natura 2000 network", fill = " r/n Plots") +theme_light()+
+  theme(legend.background=element_blank(),
+        panel.grid = element_blank(),
+        legend.position = 'bottom',
+        plot.title = element_text(size=12,face = 'bold',hjust = 0.5),
+        legend.title=element_text(size=12,face = 'bold'),
+        axis.title.x = element_text(size=12,face = 'bold'),
+        axis.text.x = element_text(size = 10, face = 'bold'),
+        axis.title.y = element_text(size=12,face = 'bold'),
+        axis.text.y = element_text(size = 10, face = 'bold'),
+        axis.ticks.y=element_blank(),
+        text = element_text(size=12), 
+        strip.text = element_text(size=12),
+        legend.text = element_text(size=12,angle = 0), 
+        legend.key.size = unit(0.8, 'cm'))   ->plot
