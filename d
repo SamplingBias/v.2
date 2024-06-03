@@ -1,7 +1,6 @@
-library(sf)
-library(terra)
-library(dplyr)
-library(tidyverse)
+library(sf) # version ‘1.0.16’
+library(terra) # version ‘1.7.71’
+library(tidyverse) # version ‘2.0.0’
 
 # Load data
 load("3474_76_sPlotOpen.RData")
