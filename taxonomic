@@ -1,9 +1,8 @@
 library(tidyverse)
-library(iNEXT)
+library(iNEXT) # version ‘3.0.1’
 library(sf)
-library(ggplot2)
-library(viridis)
-library(rnaturalearth)
+library(viridis) # version ‘0.6.5’
+library(rnaturalearth) # version ‘1.0.1’
 library(terra)
 
 #### Completeness per grids with incidence data
