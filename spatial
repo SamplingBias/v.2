@@ -1,10 +1,9 @@
 library(tidyverse)
-library(spatstat)
+library(spatstat) # version ‘3.0.8’
 library(terra)
 library(sf)
-library(ggplot2)
 library(rnaturalearth)
-library(scico)
+library(scico) # version ‘1.5.0’
 
 d <- readRDS("d.rds")
 
