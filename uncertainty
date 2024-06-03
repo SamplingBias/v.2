@@ -14,26 +14,16 @@ d$YearDif <- 2014-d$Year
 
 # Esponential decay of temporal information
 
-TU1 <- function(x){
-  y <- exp(-1*x)
+TU <- function(x=NULL, t=NULL){
+  y <- exp(t*x)
   return(y)
 }
 
-d$TU1 <- TU1(d$YearDif)
+d$TU1 <- TU(x=d$YearDif, t=-1)
 
-TU1_5 <- function(x){
-  y <- exp(-1/5*x)
-  return(y)
-}
+d$TU5 <- TU(x=d$YearDif, t=-1/5)
 
-d$TU5 <- TU1_5(d$YearDif)
-
-TU1_25 <- function(x){
-  y <- exp(-1/25*x)
-  return(y)
-}
-
-d$TU25 <- TU1_25(d$YearDif)
+d$TU25 <- TU(x=d$YearDif, t=-1/25)
 
 ############ mutilines plot #######
 
