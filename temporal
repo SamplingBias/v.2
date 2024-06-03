@@ -1,8 +1,6 @@
-library(TPD)
 library(tidyverse)
-library(vegan)
+library(vegan) # version ‘2.6.6’
 library(viridis)
-library(ggplot2)
 library(rnaturalearth)
 library(sf)
 library(terra)
