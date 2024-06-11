@@ -292,6 +292,7 @@ moran
 
 ############## Plot responses and spatial variables ###############
 
+# adding response estimates to the dataframe
 sModelCOMP <- smooth_estimates(ModelCOMP) %>%
   add_confint()
 
@@ -301,8 +302,10 @@ sModelEV <- smooth_estimates(ModelEV) %>%
 sModelNNI <- smooth_estimates(ModelNNI) %>%
   add_confint()
 
+# recover residuals from the model
+
 scaled_dataCOMP <- scaled_data %>%
-  add_partial_residuals(ModelCOMP) # attenzione che scaled_data deve essere cambiato ogni volta
+  add_partial_residuals(ModelCOMP) 
 
 scaled_dataNNI <- scaled_data %>%
   add_partial_residuals(ModelNNI)
