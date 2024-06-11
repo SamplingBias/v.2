@@ -2,18 +2,22 @@ library(sf) # version ‘1.0.16’
 library(terra) # version ‘1.7.71’
 library(tidyverse) # version ‘2.0.0’
 
-# Load data
-load("3474_76_sPlotOpen.RData")
+devtools::install_github("andrewsiefert/sPlotOpenR", dependencies = T, force = T)
 
-# Replace spaces with underscores in Species column
-DT2.oa$Species <- gsub(DT2.oa$Species, pattern = ' ', replacement = '_')
+library(sPlotOpenR)
+
+# download sPlotOpen dataset and load into R
+data <- get_sPlot(load = T) 
+
+DT <- data[["DT"]]
+DT$Species <- gsub(DT$Species, pattern = ' ', replacement = '_')
 
 # Separate data into species and non-species levels
-species_level <- DT2.oa[grepl("_", DT2.oa$Species),]
-NOspecies_level <- DT2.oa[!grepl("_", DT2.oa$Species),]
+species_level <- DT[grepl("_", DT$Species),]
+NOspecies_level <- DT[!grepl("_", DT$Species),]
 
 # Merge data
-d <- merge(species_level, header.oa, by = 'PlotObservationID')
+d <- merge(species_level, data[["header"]], by = 'PlotObservationID')
 
 rm(DT2.oa)
 rm(header.oa)
