@@ -28,7 +28,8 @@ values(r) <- 1:ncell(r)
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
 
-#### NNI 
+#### following codes standardize the number of grid cells
+
 NNI.NNI_SES <- readRDS("NNI.NNI_SES.rds")
 NNI <- NNI.NNI_SES %>% dplyr::select(id, nni) %>% unique() %>% drop_na()
 cells <- NNI$id
@@ -38,7 +39,9 @@ ctr <- ctr %>%
   st_as_sf(coords = c("x", "y"), crs = st_crs(3035)) %>%
   st_transform(crs = st_crs(3035))
 
+rm(NNI.NNI_SES)
 
+# extraction of completeness values for the centroids coordinates of NNI at 39.5 km 
 Vcompr <- extract(compr, ctr)
 
 NNI_COMP <- cbind(NNI, Completeness=Vcompr$last) %>% 
@@ -53,21 +56,29 @@ NNI_COMP_EV_standardized <- NNI_COMP_EV %>%
   mutate(across(c("nni", "Completeness", "J"), function(x) (x - min(x)) / (max(x) - min(x))))
 
 colnames(NNI_COMP_EV_standardized) <- c("id","nni","comp","J","x","y")
+
+rm(NNI_COMP_EV)
+rm(NNI_COMP)
+
 ######
 
 NNI_COMP_EV_standardized <- NNI_COMP_EV_standardized %>% 
   st_as_sf(coords = c("x", "y"), crs = st_crs(3035)) %>%
   st_transform(crs = st_crs(3035))
 
+# create Spatraster object
 
 v <- vect(NNI_COMP_EV_standardized)
 NNI_COMP_EVsr <- rasterize(v, r, field=c("nni","comp","J"))
 
-
+rm(v)
 
 NNI_COMP_EVssp <- as.polygons(NNI_COMP_EVsr, dissolve=FALSE)
 
 NNI_COMP_EVssf <- NNI_COMP_EVssp %>% st_as_sf ()
+
+# tricolore function
+
 tric <- Tricolore(NNI_COMP_EVssf, p1 = 'nni', p2 = 'comp', p3 = 'J',
                   contrast = 0.5, hue= 1)
 NNI_COMP_EVssf$rgb <- tric$rgb
@@ -115,10 +126,14 @@ library(patchwork)
 comp <- readRDS("comp.rds")
 comp <- comp %>% dplyr::select(id, SC) 
 
+# numbr of plots per grid cell
+
         nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
   mutate(nPlot = n()) %>%
   ungroup() %>% dplyr::select(id, nPlot)%>% unique()%>%
   inner_join(., df.r, by="id")
+
+# join completeness and number of plots
 
 comp.nplot <- comp %>% inner_join(., nPlot, by="id") %>%
         st_as_sf(coords = c("x", "y"), crs = st_crs(3035)) %>%
@@ -139,6 +154,8 @@ v <- vect(comp.nplot)
 compr <- rasterize(v, r, field="SC")
 nPlotr <- rasterize(v, r, field="nPlot")
 
+rm(comp.nplot)
+rm(v)
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 world <- world %>% st_transform(crs = st_crs(3035))
@@ -288,6 +305,8 @@ d <- d %>%
 
 d$records <- 1
 
+# divide dataset for plot size
+
 d1 <- d %>%
   dplyr::select(Species, PlotObservationID, records, Releve_area, id) %>% drop_na() %>% filter(Releve_area <= 150)
 #length(unique(d1$PlotObservationID))
@@ -337,6 +356,8 @@ inext <- function(x)
 
 ld1_sr <- map(ld1, ~ inext(.x))
 
+rm(ld1)
+rm(md1)
 ### d2 ###
 
 d2_matrix <- d2 %>%
@@ -381,17 +402,23 @@ df_sc <- function(x)
   return( ld_sc)
 }
 
- 
+rm(ld2)
+rm(md2)
+
 ld1_sc <- map(ld1_sr, ~ df_sc(.x)) 
 ld1_sc <- as.data.frame(unlist(ld1_sc))
 ld1_sc <- ld1_sc %>% rename(SC=`unlist(ld1_sc)`)
 d1_matrix_sc <- d1_matrix %>% cbind(ld1_sc) %>% unnest(cols = c(data))
+rm(ld1_sr)
+rm(ld1_sc)
 
 ld2_sc <- map(ld2_sr, ~ df_sc(.x)) 
 ld2_sc <- as.data.frame(unlist(ld2_sc))
 ld2_sc <- ld2_sc %>% rename(SC=`unlist(ld2_sc)`)
 d2_matrix_sc <- d2_matrix %>% cbind(ld2_sc) %>% unnest(cols = c(data))
- 
+rm(ld2_sr)
+rm(ld2_sc)
+
 r <- rast(resolution=0.5)
 e <- ext(-16.1,40.18, 32.88, 84.73)
 r<- crop(r, e)
@@ -400,6 +427,8 @@ values(r) <- 1:ncell(r)
 
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
+
+# sf points of grid cells centroids
 
 comp1 <- d %>% dplyr::select(-id) %>% 
         inner_join(., d1_matrix_sc, by="PlotObservationID")%>%
@@ -410,6 +439,8 @@ comp1 <- comp1 %>% dplyr::select(geometry, SC) %>% unique()
 
 v1 <- vect(comp1)
 compr1 <- rasterize(v1, r, field="SC")
+
+rm(comp1)
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
 world <- world %>% st_transform(crs = st_crs(3035))
