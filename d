@@ -1,7 +1,11 @@
+# iDiv page to download data
+https://idata.idiv.de/ddm/Data/ShowData/3474?version=76
+
 library(sf) # version ‘1.0.16’
 library(terra) # version ‘1.7.71’
 library(tidyverse) # version ‘2.0.0’
 
+# download sPlotOpen dataset directly from R
 devtools::install_github("andrewsiefert/sPlotOpenR", dependencies = T, force = T)
 
 library(sPlotOpenR)
