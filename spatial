@@ -335,6 +335,7 @@ for (i in 1:1121) {
 }
 
 test <- map(y5, ~ clarkevans.test2(.x, correction="cdf"))
+saveRDS(test, "test.rds")
 
 # extract from the output large list the nni values
 
