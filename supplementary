@@ -518,6 +518,10 @@ library(sf)
 library(viridis)
 library(rnaturalearth)
 
+# object "test" of clarkevans.test2 function
+test <- readRDS(test.rds)
+
+# return only monte carlo simulations different from NA
 sim <- function(x)
 {
   t <- data.frame(x[["sims"]]) %>% drop_na()
@@ -539,6 +543,7 @@ NNI.NNI_SES <- data.frame(nni=nni, nni.ses=nni.ses) %>%
 NNI.NNI_SES <- NNI.NNI_SES %>% drop_na() %>% filter(sl >= 500) %>% 
 mutate(range=cut(nni, c(0,1,1.439661), include.lowest=TRUE, labels=FALSE)) ### 487 grids
 
+rm(sl)
 
 NNI.NNI_SES.p <- NNI.NNI_SES  %>% 
   dplyr::select(range, x, y) %>% drop_na()%>% 
