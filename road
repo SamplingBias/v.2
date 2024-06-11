@@ -30,7 +30,9 @@ Europe.owin <- as.owin(Europe.tr)
 
 ppp.europe <- ppp[Europe.owin] #retain points that are inside the mask
 
-kde <- density(ppp.europe, sigma= bw.scott, kernel= "gaussian", positive= T, eps= 39539.04)
+# 1 km spatial resolution
+
+kde <- density.ppp(ppp.europe, sigma= bw.scott, kernel= "gaussian", positive= T, eps= 1000)
 raster.kde <- rast(kde)
 
 #assign the crs of the projected coordinates given at the beginning 
