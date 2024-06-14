@@ -94,9 +94,7 @@ nNat2 <- readRDS("nNat2.rds")
 
 #### Facets of bias ####
 
-NNI.NNI_SES <- readRDS("NNI.NNI_SES.rds") 
-
-nNat2 <- readRDS("nNat2.rds") 
+NNI.NNI_SES <- readRDS("NNI.NNI_SES.rds")  
 
 dTB <- readRDS("dTB.rds")
 
@@ -126,8 +124,6 @@ NAT_DIS_PLOT_POP_COMP_ROU_auto <- cbind(NAT_nPlot, pop=Vpop$last, dis=Vdis$last,
 
 
 NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU_auto %>% dplyr::select(rIN, dis,pop, comp, rough, nPlot)
-
-rm(NAT_DIS_PLOT_POP_COMP_ROU_auto)
 
 # standardization and normalization
 
@@ -193,8 +189,6 @@ NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop$last, dis=Vdis$last, 
 
 NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, dis,pop, rough, nni, nPlot)
 
-rm(NAT_DIS_PLOT_POP_NNI_ROU_auto)
-
 scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
@@ -249,8 +243,6 @@ dTB <- dTB %>% dplyr::select(id, J)
 NAT_DIS_PLOT_POP_EV_ROU <- cbind(NAT_nPlot, pop=Vpop$last, dis=Vdis$last, rough=Vrough$last) %>% inner_join(.,dTB, by="id") %>% drop_na()
 
 NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, dis, pop, rough, J, nPlot)
-
-rm(NAT_DIS_PLOT_POP_EV_ROU) 
 
 scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
   mutate(across(everything(), scale)) %>%
@@ -327,9 +319,13 @@ p_N2K_comp <- sModelCOMP %>%
     data = scaled_dataCOMP, cex = 1.5, colour = "steelblue3"
   ) +
   geom_line(aes(x = N2K, y = .estimate), lwd = 1.2) +
-  labs(y = "Taxonomic bias", title = "A") +
+  labs(y = "Completeness", title = "A") +
 coord_cartesian(ylim= c(-0.07, 0.15)) +
-  theme(panel.background = element_blank())
+  theme(panel.background = element_blank(),
+        axis.title.x = element_text(size=14),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size=14),
+        axis.text.y = element_text(size = 14))
 
 
 p_N2K_nni <- sModelNNI %>%
@@ -346,9 +342,13 @@ p_N2K_nni <- sModelNNI %>%
     data = scaled_dataNNI, cex = 1.5, colour = "orange"
   ) +
   geom_line(aes(x = N2K, y = .estimate), lwd = 1.2) +
-  labs(y = "Spatial bias", title = "B") +
+  labs(y = "NNI", title = "B") +
   coord_cartesian(ylim= c(-0.07, 0.15)) +
-  theme(panel.background = element_blank())
+  theme(panel.background = element_blank(),
+        axis.title.x = element_text(size=14),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size=14),
+        axis.text.y = element_text(size = 14))
 
 
 p_N2K_ev <- sModelEV %>%
@@ -365,9 +365,13 @@ p_N2K_ev <- sModelEV %>%
     data = scaled_dataEV, cex = 1.5, colour = "darkgreen"
   ) +
   geom_line(aes(x = N2K, y = .estimate), lwd = 1.2) +
-  labs(y = "Temporal bias", title = "C") +
+  labs(y = "Pielou's Index", title = "C") +
 coord_cartesian(ylim= c(-0.25, 0.15)) +
-  theme(panel.background = element_blank())
+  theme(panel.background = element_blank(),
+        axis.title.x = element_text(size=14),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size=14),
+        axis.text.y = element_text(size = 14))
 
 p_pop_nni <- sModelNNI %>%
   filter(.smooth == "s(pop)") %>%
@@ -383,9 +387,13 @@ p_pop_nni <- sModelNNI %>%
     data = scaled_dataNNI, cex = 1.5, colour = "orange"
   ) +
   geom_line(aes(x = pop, y = .estimate), lwd = 1.2) +
-  labs(y = "Spatial bias", title = "D") +
+  labs(y = "NNI", title = "D") +
 coord_cartesian(ylim= c(-0.15, 0.25)) +
-  theme(panel.background = element_blank())
+  theme(panel.background = element_blank(),
+        axis.title.x = element_text(size=14),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size=14),
+        axis.text.y = element_text(size = 14))
 
 
 p <- p_N2K_comp + p_N2K_nni + p_pop_nni + p_N2K_ev + plot_layout(ncol = 2)
