@@ -128,6 +128,15 @@ comp <- comp %>% dplyr::select(id, SC)
 
 # numbr of plots per grid cell
 
+r <- rast(resolution=0.5)
+e <- ext(-16.1,40.18, 32.88, 84.73)
+r<- crop(r, e)
+r <- project(r, "EPSG:3035")
+values(r) <- 1:ncell(r)
+
+df.r <- as.data.frame(r, xy=TRUE)
+colnames(df.r)<- c("x","y","id")
+
         nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
   mutate(nPlot = n()) %>%
   ungroup() %>% dplyr::select(id, nPlot)%>% unique()%>%
@@ -140,15 +149,6 @@ comp.nplot <- comp %>% inner_join(., nPlot, by="id") %>%
         st_transform(crs = st_crs(3035))
 
 comp.nplot <- comp.nplot %>% unique() %>% drop_na() %>% dplyr::select(SC, nPlot, geometry) # n id 683
-
-r <- rast(resolution=0.5)
-e <- ext(-16.1,40.18, 32.88, 84.73)
-r<- crop(r, e)
-r <- project(r, "EPSG:3035")
-values(r) <- 1:ncell(r)
-
-df.r <- as.data.frame(r, xy=TRUE)
-colnames(df.r)<- c("x","y","id")
 
 v <- vect(comp.nplot)
 compr <- rasterize(v, r, field="SC")
@@ -621,6 +621,73 @@ ggsave(plot = p,
        filename = "nni_ses.jpg",
        width = 12,
        height = 12,
+       dpi = 600)
+
+############ NUMBER OF PLOTS #############
+library(tidyverse)
+library(viridis)
+library(rnaturalearth)
+library(sf)
+library(terra)
+
+d <- readRDS("d.rds")
+
+r <- rast(resolution=0.5)
+e <- ext(-16.1,40.18, 32.88, 84.73)
+r<- crop(r, e)
+r <- project(r, "EPSG:3035")
+values(r) <- 1:ncell(r)
+
+df.r <- as.data.frame(r, xy=TRUE)
+colnames(df.r)<- c("x","y","id")
+
+# select the vegetation plots and sum the number of plots per grid cell then, transform the dataframe in sf points
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+    mutate(nPlot = n()) %>%
+    ungroup() %>% dplyr::select(id, nPlot)%>% unique()%>%
+    inner_join(., df.r, by="id") %>%
+    st_as_sf(coords = c("x", "y"), crs = st_crs(3035)) %>%
+    st_transform(crs = st_crs(3035))
+
+rm(d)
+
+v <- vect(nPlot)
+nPlotr <- rasterize(v, r, field="nPlot")
+
+rm(v)
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+world <- world %>% st_transform(crs = st_crs(3035))
+
+nPlotr_sp <- as.polygons(nPlotr, dissolve=FALSE)
+nPlotr_sp %>% 
+    st_as_sf () %>%  
+    ggplot()+
+    geom_sf(data=world,
+            colour = "black", fill = "lightgray")+
+    geom_sf(aes(fill =log(last)))+
+    scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
+    coord_sf(xlim = c(2100000, 6500000), ylim = c(1100000, 5500000), expand = TRUE, datum = sf::st_crs(3035))+
+    labs(title = "Number of plots", fill = "log(nPlot)") +theme_light()+
+    theme(legend.background=element_blank(),
+          panel.grid = element_blank(),
+          legend.position = 'bottom',
+          plot.title = element_text(size=17,face = 'bold',hjust = 0.5),
+          legend.title=element_text(size=12,face = 'bold'),
+          axis.title.x = element_text(size=14,face = 'bold'),
+          axis.text.x = element_text(size = 10, face = 'bold'),
+          axis.title.y = element_text(size=14,face = 'bold'),
+          axis.text.y = element_text(size = 10, face = 'bold'),
+          axis.ticks.y=element_blank(),
+          text = element_text(size=12), 
+          strip.text = element_text(size=12),
+          legend.text = element_text(size=12,angle = 0), 
+          legend.key.size = unit(0.8, 'cm'))   ->plot
+
+ggsave(plot = plot,
+       filename = "nPlot.jpg",
+       width = 10,
+       height = 10,
        dpi = 600)
 
 ############ NATURA 2000 NETWORK #############
